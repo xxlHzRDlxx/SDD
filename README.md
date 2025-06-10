@@ -65,7 +65,7 @@ Save the script: Save the provided code as a Python file, e.g., video_transfer.p
 
 Make it executable: chmod +x video_transfer.py
 
-Run the script: python3 video_transfer.py or ./video_transfer.py
+Run the script: python download.py or ~/scripts/download.py
 
 It's recommended to set this script up as a cron job or a systemd service to run automatically when removable media is inserted or on a schedule.
 Configuration
