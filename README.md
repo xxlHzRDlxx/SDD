@@ -67,8 +67,7 @@ Make it executable: chmod +x video_transfer.py
 
 Run the script: python download.py or python ~/scripts/download.py
 
-It's recommended to set this script up as a cron job or a systemd service to run automatically when removable media is inserted or on a schedule.
-Configuration
+Please put this script in the ~/scripts/ folder titles download.py
 source_dir: Currently set to /media/. If your removable media mounts to a different base directory, update this variable.
 VALID_EXTS: Defines the video file extensions to look for (.mp4, .mov). Add or remove extensions as needed.
 base_destination_path: Set to /mnt/unifi/Unsorted_Videos/. Modify this to your desired video archive location.
