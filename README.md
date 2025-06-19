@@ -1,89 +1,229 @@
-This script, written in Python 3, automates the process of copying the latest video files from recently connected removable media (like USB drives) to a designated "Unsorted Videos" directory. It also provides real-time notifications on a Kodi media center about the transfer process.
+# OSMC Video Transfer Script
 
-Features
-Automatic Media Detection: Identifies the most recently mounted removable media in the /media/ directory.
-Latest Video Discovery: Scans the detected removable media for the 3 most recently modified .mp4 or .mov video files.
-Duplicate Prevention: Before copying, it checks if the video files already exist in the destination directory or its subfolders to avoid duplicates.
-Organized Archiving: Creates a new, timestamped subfolder within the destination directory for each transfer, named after the removable media (e.g., [USB_DRIVE_NAME] - YYYY-MM-DD HH-MM-SS).
-Kodi Notifications: Sends on-screen notifications to Kodi, informing the user about:
-Script execution.
-Progress of video transfers (e.g., "1 of 3 new videos downloaded").
-Completion of transfers.
-Skipped files due to existing duplicates.
-Errors during the process (e.g., no media found, Kodi connection issues, file copy failures).
-Robust Error Handling: Includes comprehensive error handling for file operations, network requests to Kodi, and JSON parsing.
-Logging: Records script execution timestamps to a download log file.
-Prerequisites
-Python 3: The script is written in Python 3.
-requests library: Install using pip3 install requests.
-Kodi: Must be running on localhost (the same machine where the script is executed).
-Kodi JSON-RPC API Enabled: In Kodi settings, ensure "Allow remote control via HTTP" is enabled (Settings -> Services -> Control).
-sudo privileges: The script uses sudo cp for copying files, which may require password elevation. Ensure the user running the script has appropriate sudo permissions without a password prompt for cp if running automatically.
-Mount Point: Removable media are expected to be mounted under /media/.
-Destination Directory: The script targets /mnt/unifi/Unsorted_Videos/ as the base destination for copied videos. Ensure this directory exists and the script has write permissions.
-How it Works
-Initialization:
+This repository contains a Python script designed to automate the transfer of video files from a connected USB drive (or SD card) to a Network Attached Storage (NAS) accessible by your OSMC device. The script is specifically tailored for a Linux Vero V OSMC box and integrates with Kodi through keymapping for easy execution.
 
-Logs the current time to /home/osmc/scripts/download.log.
-Defines the source_dir as /media/.
-Sets allowed video extensions (.mp4, .mov).
-Kodi Notification Function (send_kodi_notification):
+## Table of Contents
 
-Connects to Kodi's JSON-RPC API (default http://localhost:80/jsonrpc).
-Sends GUI.ShowNotification requests with a specified title, message, display time, and image type.
-Handles various network and JSON-related errors when communicating with Kodi.
-Find Latest Videos (get_latest_mp4_files):
+- [Overview](#overview)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+  - [Script Placement](#script-placement)
+  - [NAS Mounting (AutoFS)](#nas-mounting-autofs)
+  - [Kodi Keymapping](#kodi-keymapping)
+- [Usage](#usage)
+- [Logging](#logging)
+- [Configuration](#configuration)
+- [Script Details](#script-details)
+- [Troubleshooting](#troubleshooting)
 
-Recursively searches the given root_dir for .mp4 and .mov files.
-Sorts the found files by their modification time to identify the latest ones.
-Returns a specified count (defaulting to 3) of the most recent video file paths.
-Identify Recent Removable Media (get_most_recent_removable_media):
+## Overview
 
-Lists subdirectories within /media/.
-Assumes the most recently modified subdirectory is the newly mounted removable media.
-Returns the basename (folder name) of this media.
-Check for Duplicates (find_file_in_unsorted_videos):
+When a USB drive or SD card containing video files is inserted into your OSMC Vero V, this script, when triggered, will automatically identify the most recently connected media. It then scans for video files (currently `.mp4` and `.mov` are supported) and copies any new files to a designated folder on your NAS. Duplicate files are handled by appending a date and an incrementing counter to the filename to prevent overwrites. Kodi notifications provide real-time feedback on the transfer process.
 
-Performs a recursive search within the base_destination_path to see if a file with the given file_name already exists.
-Copy Files (check_and_copy_files):
+## Features
 
-Iterates through the source_files (latest videos from removable media).
-For each file, it calls find_file_in_unsorted_videos to check for duplicates in the destination.
-If a file is new, it's added to a files_to_copy list. Kodi is notified if no new videos are found.
-If there are files to copy, it creates a new subdirectory in /mnt/unifi/Unsorted_Videos/ named after the removable media and the current timestamp.
-Uses subprocess.run(['sudo', 'cp', ...]) to copy each new file to the created destination folder.
-Sends Kodi notifications for each successful copy and for overall progress.
-Handles errors during the copying process.
-Main Execution (if __name__ == "__main__":):
+- **Automated Media Detection:** Identifies the most recently mounted removable media.
+- **Video File Filtering:** Specifically looks for `.mp4` and `.mov` video files.
+- **Duplicate Prevention:** Renames files with a date and counter (e.g., `MyVideo - 2023-10-27 - 1.mp4`) to avoid overwriting existing files on the NAS.
+- **Kodi Integration:** Provides on-screen notifications via Kodi's JSON-RPC API for transfer status.
+- **Robust Logging:** Maintains a detailed log of all actions, including success, skips, and errors.
+- **File Name Cleaning:** Automatically removes problematic `._` prefixes and single quotes from filenames, common with files copied from HFS+ formatted devices.
+- **`sudo` Copying:** Uses `sudo cp` for file transfers to ensure proper permissions are handled when writing to the NAS.
 
-Calls get_most_recent_removable_media to find the source.
-Calls get_latest_mp4_files on the detected media to get the videos to potentially copy.
-Calls check_and_copy_files to perform the actual copying and duplicate checking logic.
-Sends Kodi notifications based on whether media was found and if any video files were processed.
-Usage
-Save the script: Save the provided code as a Python file, e.g., video_transfer.py.
+## Prerequisites
 
-Make it executable: chmod +x video_transfer.py
+Before setting up and using this script, ensure you have:
 
-Run the script: python download.py or python ~/scripts/download.py
+- An **OSMC Vero V** running the OSMC operating system.
+- Basic familiarity with SSH and the Linux command line.
+- A **NAS** accessible from your OSMC device.
+- Kodi's web server and JSON-RPC API enabled (Settings -> Services -> Control).
 
-Please put this script in the ~/scripts/ folder titles download.py
-source_dir: Currently set to /media/. If your removable media mounts to a different base directory, update this variable.
-VALID_EXTS: Defines the video file extensions to look for (.mp4, .mov). Add or remove extensions as needed.
-base_destination_path: Set to /mnt/unifi/Unsorted_Videos/. Modify this to your desired video archive location.
-get_latest_mp4_files(root_dir, count=3): The count parameter in this function determines how many of the latest video files are considered from the removable media. Adjust this number if you want to copy more or fewer recent files.
-Kodi JSON-RPC URL: The kodi_rpc_url is http://localhost:80/jsonrpc. If your Kodi instance is on a different IP or port, update this URL.
-Troubleshooting
-"Error: Could not connect to Kodi...":
-Ensure Kodi is running.
-Verify "Allow remote control via HTTP" is enabled in Kodi's settings (Settings -> Services -> Control).
-Check if Kodi's web server port (default 80) is not blocked by a firewall.
-"Error copying... Permission denied":
-The script uses sudo cp. Ensure the user running the script has the necessary sudo permissions to write to the base_destination_path. You might need to configure sudoers to allow passwordless execution of cp for this script's user if you intend to automate it.
-Verify the base_destination_path (/mnt/unifi/Unsorted_Videos/) exists and has correct permissions.
-"No removable media found in /media/":
-Ensure your removable media is properly mounted and accessible under the /media/ directory.
-Check if the media is formatted correctly and recognized by the OS.
-"No .mp4 or .mov files found...":
-Confirm that the video files on your removable media have the specified extensions and are not hidden.
-Check if the files are indeed recent enough to be picked up by the get_latest_mp4_files function (which defaults to the 3 latest).
+## Installation
+
+### Script Placement
+
+1.  **Create the scripts directory:**
+    Open an SSH session to your OSMC Vero V and create the dedicated scripts directory:
+
+    ```bash
+    mkdir -p ~/scripts/
+    ```
+
+2.  **Download the script and log file:**
+    Place the `download.py` script (the Python code provided below) and an empty `download.log` file into this `~/scripts/` directory.
+
+    For example, you can use `nano` to create the `download.py` file:
+
+    ```bash
+    nano ~/scripts/download.py
+    ```
+
+    Paste the Python script into the `nano` editor, then save and exit (Ctrl+X, Y, Enter).
+
+    Create the empty log file:
+
+    ```bash
+    touch ~/scripts/download.log
+    ```
+
+3.  **Make the script executable:**
+
+    ```bash
+    chmod +x ~/scripts/download.py
+    ```
+
+### NAS Mounting (AutoFS)
+
+The script assumes your NAS is mounted to `/mnt/unifi` using AutoFS. If you haven't set this up yet, please follow the official OSMC documentation for mounting network shares with AutoFS:
+
+[OSMC Wiki: Mounting network shares with autofs (alternative to fstab)](https://osmc.tv/wiki/general/mounting-network-shares-with-autofs-alternative-to-fstab/)
+
+Ensure your AutoFS configuration results in your NAS being mounted at `/mnt/unifi`. The `/etc/auto.smb.shares` file used for this setup is:
+
+```/mnt/unifi/ -fstype=cifs,rw,credentials=/home/osmc/.smbcredentials,iocharset=utf8,uid=osmc,gid=osmc,vers=3.0 ://192.168.1.38/Fun_Jumpers/Video```
+
+The credentials file (`/home/osmc/.smbcredentials`) should contain your NAS username and password in the format `username=osmc` and `password=YOUR_PASSWORD`. The password can be reset by an admin.
+
+### Kodi Keymapping
+
+The script is designed to be triggered by a long-press of the `[` (left bracket) key on your keyboard (or OSMC remote, if mapped). This is achieved through Kodi's keymapping feature.
+
+1.  **Create the keymap directory (if it doesn't exist):**
+
+    ```bash
+    mkdir -p ~/.kodi/userdata/keymaps/osmc/
+    ```
+
+2.  **Create or edit the `gen.xml` file:**
+    Use `nano` to create or edit the `gen.xml` file in the keymaps directory:
+
+    ```bash
+    nano ~/.kodi/userdata/keymaps/osmc/gen.xml
+    ```
+
+3.  **Add the keymap configuration:**
+    Paste the following XML content into the `gen.xml` file. This configures a long-press of the left bracket key to run the `download.py` script.
+
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <keymap>
+    <global>
+    <keyboard>
+    <leftbracket mod="longpress">RunScript(/home/osmc/scripts/download.py)</leftbracket>
+    </keyboard>
+    </global>
+    <FullscreenVideo>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </FullscreenVideo>
+    <FullscreenGame>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </FullscreenGame>
+    <FullscreenInfo>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </FullscreenInfo>
+    <Visualisation>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </Visualisation>
+    <MusicOSD>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </MusicOSD>
+    <VisualisationPresetList>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </VisualisationPresetList>
+    <VideoOSD>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </VideoOSD>
+    <VideoMenu>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </VideoMenu>
+    <OSDVideoSettings>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </OSDVideoSettings>
+    <OSDAudioSettings>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </OSDAudioSettings>
+    <osdsubtitlesettings>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </osdsubtitlesettings>
+    <MusicInformation>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </MusicInformation>
+    <SongInformation>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </SongInformation>
+    <MovieInformation>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </MovieInformation>
+    <PictureInfo>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </PictureInfo>
+    <FullscreenLiveTV>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </FullscreenLiveTV>
+    <AddonInformation>
+    <keyboard>
+    <leftbracket mod="longpress"/>
+    </keyboard>
+    </AddonInformation>
+    </keymap>
+    ```
+    Save and exit `nano`.
+
+4.  **Reboot Kodi:** To apply the new keymap, you need to reboot Kodi. You can do this by rebooting the entire OSMC device:
+
+    ```bash
+    sudo reboot
+    ```
+
+    For detailed information on OSMC remote long-press keymap, refer to:
+    [OSMC Wiki: OSMC Remote - Long-press keymap guide](https://osmc.tv/wiki/general/osmc-remote---long-press-keymap-guide/)
+
+## Usage
+
+1.  Insert your USB drive or SD card into your OSMC Vero V.
+2.  From within Kodi, perform a **long-press** on the `[` (left bracket) key.
+3.  The script will start running in the background. You will receive Kodi notifications about the progress of the video transfer.
+
+## Logging
+
+All script activities, including successful copies, skipped files, and errors, are logged to:
+`~/scripts/download.log`
+
+You can view this log file via SSH to monitor the script's operation:
+
+```bash
+cat ~/scripts/download.log
