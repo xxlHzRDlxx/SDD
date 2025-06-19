@@ -36,7 +36,7 @@ def send_kodi_notification(title: str, message: str, displaytime_ms: int = KODI_
         title (str): The title of the notification.
         message (str): The main message content of the notification.
         displaytime_ms (int): How long the notification should be displayed in milliseconds.
-                              Default is 7000ms (7 seconds).
+                               Default is 7000ms (7 seconds).
         image_type (str): The type of image/icon to display with the notification.
                           Common built-in Kodi icons include "info", "warning", "error".
                           You can also specify a path to a custom image file if accessible by Kodi.
@@ -90,6 +90,42 @@ def send_kodi_notification(title: str, message: str, displaytime_ms: int = KODI_
         return False
 
 # --- File System Utility Functions ---
+def clean_filename(filepath: str) -> str:
+    """
+    Cleans up a filename by removing '._' prefixes and leading/trailing single quotes.
+    This is often necessary for files copied from HFS+ formatted SD cards.
+    Returns the new path if renamed, otherwise the original path.
+    """
+    directory, filename = os.path.split(filepath)
+    cleaned_filename = filename
+
+    # Remove '._' prefix
+    if cleaned_filename.startswith('._'):
+        cleaned_filename = cleaned_filename[2:]
+        log_message(f"Removed '._' prefix from '{filename}'. New name: '{cleaned_filename}'", level="DEBUG")
+
+    # Remove leading and trailing single quotes
+    if cleaned_filename.startswith("'") and cleaned_filename.endswith("'"):
+        cleaned_filename = cleaned_filename.strip("'")
+        log_message(f"Removed leading/trailing quotes from '{filename}'. New name: '{cleaned_filename}'", level="DEBUG")
+    elif cleaned_filename.startswith("'"):
+        cleaned_filename = cleaned_filename.lstrip("'")
+        log_message(f"Removed leading quote from '{filename}'. New name: '{cleaned_filename}'", level="DEBUG")
+    elif cleaned_filename.endswith("'"):
+        cleaned_filename = cleaned_filename.rstrip("'")
+        log_message(f"Removed trailing quote from '{filename}'. New name: '{cleaned_filename}'", level="DEBUG")
+
+    if cleaned_filename != filename:
+        new_filepath = os.path.join(directory, cleaned_filename)
+        try:
+            os.rename(filepath, new_filepath)
+            log_message(f"Renamed '{filepath}' to '{new_filepath}'.", level="INFO")
+            return new_filepath
+        except OSError as e:
+            log_message(f"Error renaming file from '{filepath}' to '{new_filepath}': {e}", level="ERROR")
+            return filepath # Return original path if rename fails
+    return filepath # No change needed
+
 def get_latest_video_files(root_dir, count=3):
     """
     Finds the 'count' latest video files (based on VALID_VIDEO_EXTENSIONS)
@@ -146,38 +182,71 @@ def get_most_recent_removable_media(media_root_dir):
         send_kodi_notification("Media Scan Failed", f"Error detecting media: {e}", image_type="error")
         return None
 
-def find_file_in_unsorted_videos(file_name, unsorted_videos_base_dir):
+def find_file_in_destination(original_file_name, destination_sd_card_dir):
     """
-    Checks if a file with file_name exists anywhere within the unsorted_videos_base_dir
-    or its subdirectories.
+    Checks if a file with the original name (plus optional date and counter)
+    exists within the specified SD card's destination directory.
+    This function has been modified to account for the new naming convention
+    and wildcard matching.
     """
-    log_message(f"Checking if '{file_name}' already exists in '{unsorted_videos_base_dir}'...", level="DEBUG")
-    for root, _, files in os.walk(unsorted_videos_base_dir):
-        if file_name in files:
-            log_message(f"Found '{file_name}' at '{os.path.join(root, file_name)}'.", level="DEBUG")
-            return True
-    log_message(f"'{file_name}' not found in '{unsorted_videos_base_dir}'.", level="DEBUG")
+    log_message(f"Checking if '{original_file_name}' (or dated/numbered versions) already exists in '{destination_sd_card_dir}'...", level="DEBUG")
+    
+    base_name, ext = os.path.splitext(original_file_name)
+    
+    # Check for the exact original file name with appended date (e.g., "MyVideo - 2023-10-27.mp4")
+    # This assumes the current date for the check, which aligns with how the files are named on copy.
+    current_date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    expected_dated_name = f"{base_name} - {current_date_str}{ext}"
+    if os.path.exists(os.path.join(destination_sd_card_dir, expected_dated_name)):
+        log_message(f"Found existing file: '{expected_dated_name}'.", level="DEBUG")
+        return True
+
+    # Check for original name with appended date and counter (e.g., "MyVideo - 2023-10-27 - 1.mp4")
+    # Using glob to find any file matching the pattern
+    wildcard_pattern = f"{base_name} - {current_date_str} -*{ext}"
+    if glob.glob(os.path.join(destination_sd_card_dir, wildcard_pattern)):
+        log_message(f"Found existing file matching wildcard pattern: '{wildcard_pattern}'.", level="DEBUG")
+        return True
+
+    log_message(f"'{original_file_name}' (or dated/numbered versions) not found in '{destination_sd_card_dir}'.", level="DEBUG")
     return False
 
-def check_and_copy_files(source_files, base_destination_path, media_identifier: str = "Removable Media"):
+
+def check_and_copy_files(source_files, base_destination_path, media_identifier: str):
     """
     Checks if source files exist anywhere within the base_destination_path (including subdirectories).
     If a file does not exist, it's added to a list for copying.
-    If there are files to copy, a new folder is created in base_destination_path, and files are copied there.
+    Files are copied into a folder named after the SD card.
+    During transfer, files are renamed with a date and an incrementing number for duplicates on the same date.
+    After copying, files are cleaned using the `clean_filename` function.
     """
     log_message(f"Initiating check and copy process for {len(source_files)} files to '{base_destination_path}'.", level="INFO")
     send_kodi_notification("Video Transfer", "Starting video transfer process...", image_type="info")
+
+    destination_dir = os.path.join(base_destination_path, media_identifier)
+
+    # Create the destination directory if it doesn't exist
+    if not os.path.exists(destination_dir):
+        log_message(f"Creating destination directory for SD card: '{destination_dir}'.", level="INFO")
+        try:
+            os.makedirs(destination_dir, exist_ok=True)
+        except OSError as e:
+            log_message(f"Error creating destination directory '{destination_dir}': {e}", level="ERROR")
+            send_kodi_notification("Transfer Failed", f"Failed to create destination folder for '{media_identifier}'", image_type="error")
+            return
+    else:
+        log_message(f"Destination directory for SD card already exists: '{destination_dir}'. Adding new files.", level="INFO")
 
     files_to_copy = []
     skipped_count = 0
 
     for source_file in source_files:
         file_name = os.path.basename(source_file)
-        if not find_file_in_unsorted_videos(file_name, base_destination_path):
+        if not find_file_in_destination(file_name, destination_dir): # Check if the original file name exists anywhere in the SD card's destination folder
             files_to_copy.append(source_file)
             log_message(f"'{file_name}' is new and will be copied.", level="INFO")
         else:
-            log_message(f"Skipped: '{file_name}' already exists in '{base_destination_path}' or its subdirectories.", level="INFO")
+            log_message(f"Skipped: Original file '{file_name}' (or a dated/numbered version) already exists in '{destination_dir}'.", level="INFO")
             skipped_count += 1
 
     if not files_to_copy:
@@ -185,45 +254,50 @@ def check_and_copy_files(source_files, base_destination_path, media_identifier: 
         send_kodi_notification("Video Transfer Complete", "No new videos to download. All checked videos already exist.", image_type="info")
         return
 
-    # If there are files to copy, create a new folder with a timestamp
-    current_datetime_str = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-    destination_folder_name = f"{media_identifier} - {current_datetime_str}"
-    destination_dir = os.path.join(base_destination_path, destination_folder_name)
-
-    log_message(f"Creating new destination directory: '{destination_dir}'.", level="INFO")
-    try:
-        os.makedirs(destination_dir, exist_ok=True)
-        send_kodi_notification("Video Transfer", f"Preparing to transfer {len(files_to_copy)} new videos...", image_type="info")
-    except OSError as e:
-        log_message(f"Error creating destination directory '{destination_dir}': {e}", level="ERROR")
-        send_kodi_notification("Transfer Failed", f"Failed to create destination folder: {destination_folder_name}", image_type="error")
-        return
+    send_kodi_notification("Video Transfer", f"Preparing to transfer {len(files_to_copy)} new videos...", image_type="info")
 
     copied_count = 0
     total_files_to_copy = len(files_to_copy)
+    current_date_str = datetime.datetime.now().strftime("%Y-%m-%d")
 
     for i, source_file in enumerate(files_to_copy):
-        file_name = os.path.basename(source_file)
-        destination_file_path = os.path.join(destination_dir, file_name)
-        log_message(f"Copying '{file_name}' ({i + 1}/{total_files_to_copy})...", level="INFO")
+        original_file_name, file_extension = os.path.splitext(os.path.basename(source_file))
+
+        # Start with base name + date
+        new_file_name_base = f"{original_file_name} - {current_date_str}"
+        
+        # Check for conflicts for the current date and add incrementing number if needed
+        counter = 0
+        final_file_name = f"{new_file_name_base}{file_extension}"
+        while os.path.exists(os.path.join(destination_dir, final_file_name)):
+            counter += 1
+            final_file_name = f"{new_file_name_base} - {counter}{file_extension}"
+
+        destination_file_path = os.path.join(destination_dir, final_file_name)
+
+        log_message(f"Copying '{os.path.basename(source_file)}' as '{final_file_name}' ({i + 1}/{total_files_to_copy})...", level="INFO")
         try:
             # Use 'sudo' for copying to ensure permissions if necessary
             subprocess.run(['sudo', 'cp', source_file, destination_file_path], check=True, capture_output=True, text=True)
             copied_count += 1
-            log_message(f"Successfully copied: '{source_file}' to '{destination_dir}'", level="INFO")
-            send_kodi_notification("Video Transfer Progress", f"Copied {copied_count} of {total_files_to_copy} videos. '{file_name}'", image_type="info")
+            log_message(f"Successfully copied: '{source_file}' to '{destination_file_path}'", level="INFO")
+            send_kodi_notification("Video Transfer Progress", f"Copied {copied_count} of {total_files_to_copy} videos. '{final_file_name}'", image_type="info")
+            
+            # Clean the filename after successful copy
+            clean_filename(destination_file_path)
+            
             time.sleep(0.5) # Small delay to allow notification to show
 
         except subprocess.CalledProcessError as e:
             log_message(f"Error copying '{source_file}': {e.stderr.strip() if e.stderr else e}", level="ERROR")
-            send_kodi_notification("File Transfer Failed", f"Failed to copy: '{file_name}'", image_type="error")
+            send_kodi_notification("File Transfer Failed", f"Failed to copy: '{final_file_name}'", image_type="error")
         except Exception as e:
             log_message(f"An unexpected error occurred while copying '{source_file}': {e}", level="ERROR")
-            send_kodi_notification("File Transfer Failed", f"Unexpected error copying: '{file_name}'", image_type="error")
+            send_kodi_notification("File Transfer Failed", f"Unexpected error copying: '{final_file_name}'", image_type="error")
 
     if copied_count > 0:
-        log_message(f"Successfully copied {copied_count} new videos to '{destination_folder_name}'. Total skipped: {skipped_count}", level="INFO")
-        send_kodi_notification("Video Transfer Complete", f"Successfully copied {copied_count} new videos to '{destination_folder_name}'.", image_type="info")
+        log_message(f"Successfully copied {copied_count} new videos to '{media_identifier}'. Total skipped: {skipped_count}", level="INFO")
+        send_kodi_notification("Video Transfer Complete", f"Successfully copied {copied_count} new videos to '{media_identifier}'.", image_type="info")
     else:
         log_message(f"No new videos were copied. All {total_files_to_copy} files either existed or failed to copy.", level="WARNING")
         send_kodi_notification("Video Transfer", "No new videos were copied.", image_type="warning")
@@ -258,7 +332,3 @@ if __name__ == "__main__":
     else:
         log_message(f"No removable media detected in '{SOURCE_MEDIA_DIR}'.", level="WARNING")
         send_kodi_notification("Video Transfer", "No removable media found in /media. Nothing to transfer.", image_type="info")
-
-    log_message("Script finished: Video transfer process concluded.", level="INFO")
-    send_kodi_notification("Video Transfer Script", "Script finished.", image_type="info")
-osmc@SkydiveDanielsonOSMC:~$
