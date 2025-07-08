@@ -11,7 +11,7 @@ This repository contains a Python script designed to automate the transfer of vi
   - [Script Placement](#script-placement)
   - [NAS Mounting (AutoFS)](#nas-mounting-autofs)
   - [Kodi Keymapping](#kodi-keymapping)
-- [Update Main Menu](#updating-main-menu)
+- [Updating the Main Menu](#updating-the-main-menu)
 - [Usage](#usage)
 - [Logging](#logging)
 - [Configuration](#configuration)
