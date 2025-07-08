@@ -1,4 +1,3 @@
-````markdown
 # OSMC Video Transfer Script
 
 This repository contains a Python script designed to automate the transfer of video files from a connected USB drive (or SD card) to a Network Attached Storage (NAS) accessible by your OSMC device. The script is specifically tailored for a Linux Vero V OSMC box and integrates with Kodi through keymapping for easy execution.
@@ -337,5 +336,4 @@ You can view this log file via SSH to monitor the script's operation:
 cat ~/scripts/download.log
 ````
 
-```
 ```
