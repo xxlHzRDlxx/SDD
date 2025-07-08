@@ -217,105 +217,68 @@ The script is designed to be triggered by a long-press of the `[` (left bracket)
 
 ## Update Main Menu
 
-To customize the main menu in Kodi on your OSMC device, you will need to edit the `Home.xml` file. This allows you to remove default items and add custom entries linked to specific actions, such as opening a network drive or a specific video folder.
+Updating the Main Menu
+----------------------
 
-1.  **Access Kodi's System Files via SSH:**
-    Connect to your OSMC Vero V using SSH. The `Home.xml` file is typically located in your skin's directory. For the default OSMC skin, it's usually found here:
+To customize the main menu in OSMC/Kodi to remove all default items except "Settings" (which should remain at the bottom), and then add custom video library shortcuts, follow these steps using the GUI:
 
-    ```bash
-    ~/.kodi/addons/skin.osmc/xml/
-    ```
+1.  **Navigate to the Customize Main Menu settings:**
 
-    Navigate to this directory:
+    *   From the Kodi home screen, navigate to **Settings** (the gear icon).
 
-    ```bash
-    cd ~/.kodi/addons/skin.osmc/xml/
-    ```
+    *   Select **Interface**.
 
-2.  **Backup `Home.xml`:**
-    Before making any changes, it's crucial to create a backup of the original `Home.xml` file.
+    *   In the left-hand menu, select **Skin**.
 
-    ```bash
-    cp Home.xml Home.xml.bak
-    ```
+    *   Under the "Skin" settings, choose **Configure skin...**.
 
-3.  **Edit `Home.xml`:**
-    Open the `Home.xml` file using `nano`:
+    *   Navigate to **Main Menu**.
 
-    ```bash
-    nano Home.xml
-    ```
+2.  **Remove default menu items:**
 
-4.  **Modify the Main Menu Structure:**
-    Within the `Home.xml` file, you will find a section that defines the main menu items. This is usually within a `<menu>` or `<item id="XX">` block.
+    *   For each default menu item you wish to remove (e.g., Movies, TV Shows, Music, etc.), select the item.
 
-    **Goal:**
-    * Remove every default menu item except "Settings".
-    * Keep "Settings" at the bottom.
-    * Add the following new menu items in order from top to bottom:
-      * SD Card
-      * Fun Jumpers
-      * Unsorted Videos
-      * Students
+    *   Look for an option to "Disable" or "Remove" the item. Confirm your choice.
 
-    **Example `Home.xml` modification (illustrative - actual structure may vary slightly):**
+    *   Repeat this for all default items _except_ "Settings". Ensure "Settings" remains enabled.
 
-    Locate the `<menu>` section (or similar) that contains the main navigation items. You will need to comment out or delete the existing default items, replacing them with your custom entries.
+3.  **Add custom menu items and map them:**
 
-    **Find the section that looks something like this (it will have many more items):**
+    *   After removing the unwanted default items, you will see "Custom 1", "Custom 2", etc., or an option to "Add new shortcut".
 
-    ```xml
-    <menu>
-        <item id="1">
-            <label>Movies</label>
-            <onclick>ActivateWindow(Videos,MovieTitles,return)</onclick>
-        </item>
-        <item id="9000">
-            <label>Settings</label>
-            <onclick>ActivateWindow(Settings)</onclick>
-        </item>
-    </menu>
-    ```
+    *   Select the first available custom slot or "Add new shortcut".
 
-    **Replace the default items (except Settings) with your custom entries. The `id` values should be unique but the exact numbers aren't critical as long as they don't clash with other elements in the file. Here's how you might re-structure it:**
+    *   **For the first custom item (SD Card):**
 
-    ```xml
-    <menu>
-        <item id="1">
-            <label>SD Card</label>
-            <onclick>ActivateWindow(Videos,"/media/",return)</onclick>
-        </item>
-        <item id="2">
-            <label>Fun Jumpers</label>
-            <onclick>ActivateWindow(Videos,"/mnt/unifi/people/",return)</onclick>
-        </item>
-        <item id="3">
-            <label>Unsorted Videos</label>
-            <onclick>ActivateWindow(Videos,"/mnt/unifi/Unsorted_Videos",return)</onclick>
-        </item>
-        <item id="4">
-            <label>Students</label>
-            <onclick>ActivateWindow(Videos,"/mnt/unifi/Students",return)</onclick>
-        </item>
-        <item id="9000">
-            <label>Settings</label>
-            <onclick>ActivateWindow(Settings)</onclick>
-        </item>
-    </menu>
-    ```
-    **Important:** The exact line numbers and surrounding XML tags might differ based on your specific OSMC skin and version. Focus on finding the relevant `<item>` tags within the main menu structure. You may need to carefully examine the existing `Home.xml` to determine the correct section to modify.
+        *   Select **Choose item for menu shortcut**.
 
-5.  **Save and Exit:**
-    After making the changes, save the file (Ctrl+X, Y, Enter).
+        *   Choose **Videos**.
 
-6.  **Reboot Kodi:**
-    To apply the changes to the Kodi main menu, you need to reboot Kodi (or your entire OSMC device):
+        *   Select **Video Add-ons** (or similar, depending on your skin version).
 
-    ```bash
-    sudo reboot
-    ```
+        *   Select **Add-on shortcut**.
 
-    Upon reboot, your Kodi main menu should now display only the "SD Card", "Fun Jumpers", "Unsorted Videos", "Students", and "Settings" options, in that specific order.
+        *   Type the path ActivateWindow(Videos,"/media/",return).
+
+        *   When prompted, enter "SD Card" as the name for the menu item.
+
+    *   **For the second custom item (Fun Jumpers):**
+
+        *   Select the next available custom slot or "Add new shortcut".
+
+        *   Select **Choose item for menu shortcut**.
+
+        *   Choose **Videos**.
+
+        *   Select **Video Add-ons** (or similar).
+
+        *   Select **Add-on shortcut**.
+
+        *   Type the path ActivateWindow(Videos,"/mnt/unifi/people/",return).
+
+        *   When prompted, enter "Fun Jumpers" as the name for the menu item.
+
+    *   **For the third custom item (Unsorted Videos):*
 
 ## Usage
 
