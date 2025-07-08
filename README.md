@@ -236,45 +236,49 @@ To customize the main menu in OSMC/Kodi to remove all default items except "Sett
 
     *   For each default menu item you wish to remove (e.g., Movies, TV Shows, Music, etc.), select the item.
 
-    *   Look for an option to "Disable" or "Remove" the item. Confirm your choice.
+    *   Look for the option to "Delete" the item. Confirm your choice.
 
     *   Repeat this for all default items _except_ "Settings". Ensure "Settings" remains enabled.
 
 3.  **Add custom menu items and map them:**
 
-    *   After removing the unwanted default items, you will see "Custom 1", "Custom 2", etc., or an option to "Add new shortcut".
+    *   After removing the unwanted default items, you will see an option to "Add" a new shortcut.
 
-    *   Select the first available custom slot or "Add new shortcut".
+    *   Select "Add" to start making the first custom item.
 
     *   **For the first custom item (SD Card):**
 
-        *   Select **Choose item for menu shortcut**.
+        *   Select **Change Action**.
 
         *   Choose **Videos**.
 
-        *   Select **Video Add-ons** (or similar, depending on your skin version).
+        *   Select **Source**.
 
-        *   Select **Add-on shortcut**.
+        *   Select **Auto-mounted drives**.
 
-        *   Type the path ActivateWindow(Videos,"/media/",return).
+        *   Select **Create Menu Item to Here**.
+     
+        *   Select **files view**.
 
-        *   When prompted, enter "SD Card" as the name for the menu item.
+        *   When prompted, enter "SD Card" as the title for the menu item.
 
     *   **For the second custom item (Fun Jumpers):**
 
-        *   Select the next available custom slot or "Add new shortcut".
-
-        *   Select **Choose item for menu shortcut**.
+        *   Select **Change Action**.
 
         *   Choose **Videos**.
 
-        *   Select **Video Add-ons** (or similar).
+        *   Select **Source**.
 
-        *   Select **Add-on shortcut**.
+        *   Select **Network Storage**.
 
-        *   Type the path ActivateWindow(Videos,"/mnt/unifi/people/",return).
+        *   Select **People**.
+     
+        *   Select **Create Menu Item to Here**.
+     
+        *   Select **files view**.
 
-        *   When prompted, enter "Fun Jumpers" as the name for the menu item.
+        *   When prompted, enter "Fun Jumpers" as the title for the menu item.
 
     *   **For the third custom item (Unsorted Videos):*
 
