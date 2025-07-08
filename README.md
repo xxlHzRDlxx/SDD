@@ -335,5 +335,3 @@ You can view this log file via SSH to monitor the script's operation:
 ```bash
 cat ~/scripts/download.log
 ````
-
-```
