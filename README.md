@@ -14,9 +14,6 @@ This repository contains a Python script designed to automate the transfer of vi
 - [Updating the Main Menu](#updating-the-main-menu)
 - [Usage](#usage)
 - [Logging](#logging)
-- [Configuration](#configuration)
-- [Script Details](#script-details)
-- [Troubleshooting](#troubleshooting)
 
 ## Overview
 
