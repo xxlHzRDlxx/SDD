@@ -215,8 +215,6 @@ The script is designed to be triggered by a long-press of the `[` (left bracket)
     For detailed information on OSMC remote long-press keymap, refer to:
     [OSMC Wiki: OSMC Remote - Long-press keymap guide](https://osmc.tv/wiki/general/osmc-remote---long-press-keymap-guide/)
 
-## Update Main Menu
-
 Updating the Main Menu
 ----------------------
 
