@@ -11,6 +11,7 @@ This repository contains a Python script designed to automate the transfer of vi
   - [Script Placement](#script-placement)
   - [NAS Mounting (AutoFS)](#nas-mounting-autofs)
   - [Kodi Keymapping](#kodi-keymapping)
+- [Adding Network Source](#adding-network-source)
 - [Updating the Main Menu](#updating-the-main-menu)
 - [Usage](#usage)
 - [Logging](#logging)
@@ -212,8 +213,9 @@ The script is designed to be triggered by a long-press of the `[` (left bracket)
     For detailed information on OSMC remote long-press keymap, refer to:
     [OSMC Wiki: OSMC Remote - Long-press keymap guide](https://osmc.tv/wiki/general/osmc-remote---long-press-keymap-guide/)
 
+## Adding Network Source
+
 ## Updating the Main Menu
-----------------------
 
 To customize the main menu in OSMC/Kodi to remove all default items except "Settings" (which should remain at the bottom), and then add custom video library shortcuts, follow these steps using the GUI:
 
