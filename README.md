@@ -1,3 +1,4 @@
+````markdown
 # OSMC Video Transfer Script
 
 This repository contains a Python script designed to automate the transfer of video files from a connected USB drive (or SD card) to a Network Attached Storage (NAS) accessible by your OSMC device. The script is specifically tailored for a Linux Vero V OSMC box and integrates with Kodi through keymapping for easy execution.
@@ -11,6 +12,7 @@ This repository contains a Python script designed to automate the transfer of vi
   - [Script Placement](#script-placement)
   - [NAS Mounting (AutoFS)](#nas-mounting-autofs)
   - [Kodi Keymapping](#kodi-keymapping)
+- [Update Main Menu](#update-main-menu)
 - [Usage](#usage)
 - [Logging](#logging)
 - [Configuration](#configuration)
@@ -82,7 +84,11 @@ The script assumes your NAS is mounted to `/mnt/unifi` using AutoFS. If you have
 
 Ensure your AutoFS configuration results in your NAS being mounted at `/mnt/unifi`. The `/etc/auto.smb.shares` file used for this setup is:
 
-```/mnt/unifi/ -fstype=cifs,rw,credentials=/home/osmc/.smbcredentials,iocharset=utf8,uid=osmc,gid=osmc,vers=3.0 ://192.168.1.38/Fun_Jumpers/Video```
+````
+
+/mnt/unifi/ -fstype=cifs,rw,credentials=/home/osmc/.smbcredentials,iocharset=utf8,uid=osmc,gid=osmc,vers=3.0 ://192.168.1.38/Fun\_Jumpers/Video
+
+````
 
 The credentials file (`/home/osmc/.smbcredentials`) should contain your NAS username and password in the format `username=osmc` and `password=YOUR_PASSWORD`. The password can be reset by an admin.
 
@@ -212,6 +218,108 @@ The script is designed to be triggered by a long-press of the `[` (left bracket)
     For detailed information on OSMC remote long-press keymap, refer to:
     [OSMC Wiki: OSMC Remote - Long-press keymap guide](https://osmc.tv/wiki/general/osmc-remote---long-press-keymap-guide/)
 
+## Update Main Menu
+
+To customize the main menu in Kodi on your OSMC device, you will need to edit the `Home.xml` file. This allows you to remove default items and add custom entries linked to specific actions, such as opening a network drive or a specific video folder.
+
+1.  **Access Kodi's System Files via SSH:**
+    Connect to your OSMC Vero V using SSH. The `Home.xml` file is typically located in your skin's directory. For the default OSMC skin, it's usually found here:
+
+    ```bash
+    ~/.kodi/addons/skin.osmc/xml/
+    ```
+
+    Navigate to this directory:
+
+    ```bash
+    cd ~/.kodi/addons/skin.osmc/xml/
+    ```
+
+2.  **Backup `Home.xml`:**
+    Before making any changes, it's crucial to create a backup of the original `Home.xml` file.
+
+    ```bash
+    cp Home.xml Home.xml.bak
+    ```
+
+3.  **Edit `Home.xml`:**
+    Open the `Home.xml` file using `nano`:
+
+    ```bash
+    nano Home.xml
+    ```
+
+4.  **Modify the Main Menu Structure:**
+    Within the `Home.xml` file, you will find a section that defines the main menu items. This is usually within a `<menu>` or `<item id="XX">` block.
+
+    **Goal:**
+    * Remove every default menu item except "Settings".
+    * Keep "Settings" at the bottom.
+    * Add the following new menu items in order from top to bottom:
+        * SD Card
+        * Fun Jumpers
+        * Unsorted Videos
+        * Students
+
+    **Example `Home.xml` modification (illustrative - actual structure may vary slightly):**
+
+    Locate the `<menu>` section (or similar) that contains the main navigation items. You will need to comment out or delete the existing default items, replacing them with your custom entries.
+
+    **Find the section that looks something like this (it will have many more items):**
+
+    ```xml
+    <menu>
+        <item id="1">
+            <label>Movies</label>
+            <onclick>ActivateWindow(Videos,MovieTitles,return)</onclick>
+        </item>
+        <item id="9000">
+            <label>Settings</label>
+            <onclick>ActivateWindow(Settings)</onclick>
+        </item>
+    </menu>
+    ```
+
+    **Replace the default items (except Settings) with your custom entries. The `id` values should be unique but the exact numbers aren't critical as long as they don't clash with other elements in the file. Here's how you might re-structure it:**
+
+    ```xml
+    <menu>
+        <item id="1">
+            <label>SD Card</label>
+            <onclick>ActivateWindow(Videos,"/media/",return)</onclick>
+        </item>
+        <item id="2">
+            <label>Fun Jumpers</label>
+            <onclick>ActivateWindow(Videos,"/mnt/unifi/people/",return)</onclick>
+        </item>
+        <item id="3">
+            <label>Unsorted Videos</label>
+            <onclick>ActivateWindow(Videos,"/mnt/unifi/Unsorted_Videos",return)</onclick>
+        </item>
+        <item id="4">
+            <label>Students</label>
+            <onclick>ActivateWindow(Videos,"/mnt/unifi/Students",return)</onclick>
+        </item>
+        <item id="9000">
+            <label>Settings</label>
+            <onclick>ActivateWindow(Settings)</onclick>
+        </item>
+    </menu>
+    ```
+    **Important:** The exact line numbers and surrounding XML tags might differ based on your specific OSMC skin and version. Focus on finding the relevant `<item>` tags within the main menu structure. You may need to carefully examine the existing `Home.xml` to determine the correct section to modify.
+
+5.  **Save and Exit:**
+    After making the changes, save the file (Ctrl+X, Y, Enter).
+
+6.  **Reboot Kodi:**
+    To apply the changes to the Kodi main menu, you need to reboot Kodi (or your entire OSMC device):
+
+    ```bash
+    sudo reboot
+    ```
+
+    Upon reboot, your Kodi main menu should now display only the "SD Card", "Fun Jumpers", "Unsorted Videos", "Students", and "Settings" options, in that specific order.
+
 ## Usage
 
 1.  Insert your USB drive or SD card into your OSMC Vero V.
@@ -227,3 +335,7 @@ You can view this log file via SSH to monitor the script's operation:
 
 ```bash
 cat ~/scripts/download.log
+````
+
+```
+```
