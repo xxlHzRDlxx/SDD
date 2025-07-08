@@ -215,6 +215,37 @@ The script is designed to be triggered by a long-press of the `[` (left bracket)
 
 ## Adding Network Source
 
+ **Navigate to the Videos Section:**
+    * From the OSMC home screen, scroll down and select "Videos."
+    * Then, choose "Files."
+
+2.  **Add Video Source:**
+    * Scroll down and select "Add Videos..."
+
+3.  **Browse for the Path:**
+    * In the "Add video source" window, select "Browse."
+    * You'll see a list of available directories. Since `/mnt/unifi/` is a local mount point, you'll need to navigate through the file system.
+    * Look for a directory named "Root filesystem" or similar (it might just be a `/`). Select it.
+    * Then, find and select "mnt."
+    * Inside "mnt," select "unifi."
+    * After selecting "unifi," press "OK" on the right side of the screen.
+
+4.  **Name the Source:**
+    * You'll be returned to the "Add video source" window. The "Enter a name for this media source" field will now show "unifi" (or a similar auto-generated name). You can keep this name or change it to something more descriptive (e.g., "Unifi Videos," "Security Footage").
+
+5.  **Set Content Type (Optional but Recommended):**
+    * Select "This directory contains:"
+    * Here, you can specify the type of content in the folder (e.g., "Movies," "TV Shows," "Music Videos," "None"). If it's a mix or general footage, "None" is fine, or you can select a more specific type if applicable to allow scraping of metadata.
+    * If you select "Movies" or "TV Shows," you'll then be prompted to choose a scraper (e.g., TheMovieDB, TheTVDB). Choose the appropriate one if you want metadata to be pulled.
+
+6.  **Confirm and Add:**
+    * After setting the content type (or leaving it as "None"), select "OK."
+
+7.  **Scan for Content (if applicable):**
+    * If you chose "Movies" or "TV Shows" as the content type, OSMC will ask if you want to scan the directory now. Select "Yes" to start scanning for your video files and gathering metadata. If you chose "None," this step will be skipped.
+
+Your `/mnt/unifi/` directory is now added as a video source in OSMC, and you can access its contents directly from the "Videos" section.
+
 ## Updating the Main Menu
 
 To customize the main menu in OSMC/Kodi to remove all default items except "Settings" (which should remain at the bottom), and then add custom video library shortcuts, follow these steps using the GUI:
