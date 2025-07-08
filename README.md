@@ -280,7 +280,61 @@ To customize the main menu in OSMC/Kodi to remove all default items except "Sett
 
         *   When prompted, enter "Fun Jumpers" as the title for the menu item.
 
-    *   **For the third custom item (Unsorted Videos):*
+    *   **For the third custom item (Unsorted Videos):**
+    
+        *   Select **Change Action**.
+
+        *   Choose **Videos**.
+
+        *   Select **Source**.
+
+        *   Select **Network Storage**.
+
+        *   Select **Unsorted_Videos**.
+     
+        *   Select **Create Menu Item to Here**.
+     
+        *   Select **files view**.
+
+        *   When prompted, enter "Unsorted Videos" as the title for the menu item.
+    
+    *   **For the fourth custom item (Students):**
+        
+        *   Select **Change Action**.
+
+        *   Choose **Videos**.
+
+        *   Select **Source**.
+
+        *   Select **Network Storage**.
+
+        *   Select **Students**.
+     
+        *   Select **Create Menu Item to Here**.
+     
+        *   Select **files view**.
+
+        *   When prompted, enter "Students" as the title for the menu item.
+    
+4.  **Arrange the menu items:**
+        
+    *   After adding all custom items, go back to the "Main Menu" configuration page.
+        
+    *   You should now see your newly added items. Use the "Move Up" and "Move Down" options to arrange them in the desired order:
+        
+        1.  SD Card
+        
+        2.  Fun Jumpers
+        
+        3.  Unsorted Videos
+        
+        4.  Students
+        
+        5.  Settings (should naturally be at the bottom if it was the only default item left)
+    
+5.  **Save changes and exit:**
+        
+    *   Exit the skin settings. The changes to your main menu should be immediately visible.
 
 ## Usage
 
